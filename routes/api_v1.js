@@ -36,8 +36,12 @@ router.get('/ip/:ip', function(req, res) {
 			result = { country: result.country };
 		}
 	}
-	res.send(result);
-  	// we should set headers properly, but it seems there are already set by express
+	
+	// this will not be chaning too often, just cache it everywhere for 1 hours
+	res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+
+    res.send(result);
 });
 
 module.exports = router;
