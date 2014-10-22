@@ -1,7 +1,7 @@
 var assert = require('assert');
 var Q = require('q');
-var parsingUtils = require('../src/utils/parsing_utils');
-var binaryList = require('../src/utils/binary_list');
+var parsingUtils = require('../utils/parsing_utils');
+var binaryList = require('../utils/binary_list');
 
 var start = process.hrtime();
 
@@ -18,26 +18,38 @@ var testVectorFilePath = './data/test_vector.csv';
 
 describe('utils module', function(){
 
-	it('should read whole file', function(done){
-		this.timeout(5000);
-		var res = parsingUtils.parseFile(testFilePath);
-		var data = [];
-		res
-			.then(function(){
-				assert.equal(100, data.length);
-				done();
-			}, function(){
-			}, function(item) {
-				data.push(item);
-			})
-			.catch(function(e) { done(e); });
-	});
+	describe('parsing', function() {
+		it('should read whole file', function(done){
+			this.timeout(5000);
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res
+				.then(function(){
+					assert.equal(100, data.length);
+					done();
+				}, function(){
+				}, function(item) {
+					data.push(item);
+				})
+				.catch(function(e) { done(e); });
+		});
 
 
 
-	it ('should parse ip', function(){
-		var ip = parsingUtils.parseIp("2037380272");
-		assert.deepEqual([121,111,244,176], ip);
+		it ('should construct ip from integer', function(){
+			var ip = parsingUtils.numberToIp("2037380272");
+			assert.deepEqual([121,111,244,176], ip);
+		});
+
+		it ('should parse valid ip', function(){
+			var ip = parsingUtils.parseIp('121.111.244.176');
+			assert.equal(2037380272, ip);
+		});
+
+		it ('should not parse invalid ip', function(){
+			var ip = parsingUtils.parseIp('121.111.344.176');
+			assert.equal(null, ip);
+		});
 	});
 
 
@@ -65,7 +77,7 @@ describe('utils module', function(){
 			res.then(function(){
 
 				var list = binaryList.createBinaryList(data);
-				var result = list.find(2001406478);
+				var result = list.find(2001406478, true);
 				assert.equal("B", result.country);
 				done();
 			}, function(){
@@ -81,7 +93,7 @@ describe('utils module', function(){
 			res.then(function(){
 
 				var list = binaryList.createBinaryList(data);
-				var result = list.find(2001406470);
+				var result = list.find(2001406470, true);
 				assert.equal("B", result.country);
 				done();
 			}, function(){
@@ -97,8 +109,24 @@ describe('utils module', function(){
 			res.then(function(){
 
 				var list = binaryList.createBinaryList(data);
-				var result = list.find(2001406479);
+				var result = list.find(2001406479, true);
 				assert.equal(null, result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+
+		it('should find last item on the list', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = binaryList.createBinaryList(data);
+				var result = list.find(2037380272, true);
+				assert.equal("Z", result.country);
 				done();
 			}, function(){
 			}, function(item) {
@@ -108,34 +136,74 @@ describe('utils module', function(){
 		});
 	});
 
-	it.only('performence test', function(done){
-		var dataPromise = parsingUtils.parseFile(testBigFilePath);
-		var data = [];
-		
-		dataPromise.then(function(){			
+	describe.skip('should be performant enough', function(){
 
-			stopwatch('starting');
-			var list = binaryList.createBinaryList(data, false);
-			stopwatch('building binary list');
-			var result = list.find(2002534209);
-			stopwatch('warm up');
-			for (var i = 0; i < 1000000; i++) {
+		it('binary search', function(done){
+			this.timeout(20000);
+			
+			var dataPromise = parsingUtils.parseFile(testBigFilePath);
+			var data = [];
+
+			dataPromise.then(function(){			
+
+				stopwatch('starting binary list WITHOUT precalculated initials');
+				var list = binaryList.createBinaryList(data, false);
+				stopwatch('building binary list');
 				var result = list.find(2002534209);
-			}
-			stopwatch('test for 1.000.000 calls');
-			assert.equal("PHILIPPINES", result.country);
-			done();
+				stopwatch('warm up');
+				for (var i = 0; i < 1000000; i++) {
+					var result = list.find(2002534209);
+				}
+				stopwatch('test for 1.000.000 calls');
+				console.log();
 
-		}, function(){
-		}, function(item) {
-			data.push(item);
-		})
-		.catch(function(e) { done(e); });
-		
+				stopwatch('starting binary list WITH precalculated initials');
+				var list = binaryList.createBinaryList(data, true);
+				stopwatch('building binary list');
+				var result = list.find(2002534209);
+				stopwatch('warm up');
+				for (var i = 0; i < 1000000; i++) {
+					var result = list.find(2002534209);
+				}
+				stopwatch('test for 1.000.000 calls');
+				console.log();
+
+				stopwatch('starting binary list WITHOUT precalculated initials');
+				var list = binaryList.createBinaryList(data, false);
+				stopwatch('building binary list');
+				var result = list.find(2002534209);
+				stopwatch('warm up');
+				for (var i = 0; i < 1000000; i++) {
+					var result = list.find(2002534209);
+				}
+				stopwatch('test for 1.000.000 calls');
+				console.log();
+				var result = list.find(2037380272);
+				assert.equal("JAPAN", result.country);
+
+				stopwatch('starting binary list WITH precalculated initials');
+				var list = binaryList.createBinaryList(data, true);
+				stopwatch('building binary list');
+				var result = list.find(2002534209);
+				stopwatch('warm up');
+				for (var i = 0; i < 1000000; i++) {
+					var result = list.find(2002534209);
+				}
+				stopwatch('test for 1.000.000 calls');
+
+				assert.equal("PHILIPPINES", result.country);
+
+				done();
+
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });	
+		});
+
 	});
 
-
-
-
+	
 });
 

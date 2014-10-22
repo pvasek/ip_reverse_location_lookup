@@ -10,7 +10,7 @@ var precalculateInitalValues = function(data) {
 			startIdx = 0;
 		}
 		if (startKey !== i.routeKey || idx === data.length-1) {
-			result[startKey] = {lo: startIdx, hi: idx-1, key: startKey};
+			result[startKey] = {lo: startIdx, hi: idx, key: startKey};
 			startIdx = idx;
 			startKey = i.routeKey;
 		}
