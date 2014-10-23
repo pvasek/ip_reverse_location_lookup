@@ -31,13 +31,12 @@ var createDirectAccessList = function(input){
 			var to = item.to & 0xffffff;
 			var buffer = bufferList[key];
 			if (!buffer) {
-				buffer = new Buffer(0xffffff*2);
+				buffer = new Buffer(0xffffff);
 				bufferList[key] = buffer;
 			} 
 			for (var i = from; i <= to; i++) {
 				var idx = countries[item.country];
-				buffer[i] = idx & 0xff;
-				buffer[i*2] = idx >> 8;
+				buffer[i] = idx;
 			}
 		}
 	});	
@@ -57,7 +56,7 @@ var createDirectAccessList = function(input){
 					return null;
 				}
 				var bufferIdx = ip & 0xffffff;
-				var idx = (buffer[bufferIdx*2] << 8) + buffer[bufferIdx];
+				var idx = buffer[bufferIdx];
 				return countryMap[idx];
 			}
 	};
