@@ -1,5 +1,5 @@
 var express = require('express');
-var binaryList = require('./../utils/binary_list');
+var directAccess = require('./../utils/direct_access');
 var parsingUtils = require('./../utils/parsing_utils');
 
 var router = express.Router();
@@ -11,7 +11,7 @@ var initialize = function() {
 	var data = [];
 
 	dataPromise.then(function(){			
-		list = binaryList.createBinaryList(data, true);
+		list = directAccess.createDirectAccessList(data);
 		console.log('initialized');
 	}, function(){
 	}, function(item) {
@@ -29,18 +29,19 @@ router.get('/ip/:ip', function(req, res) {
 		result = {country: '', error: 'ip address is in incorect format'};
 	} else {
 		console.log(ip);
-		var ipInfo = list.find(ip);
-		if (ipInfo === null) {
+		var country = list.find(ip);
+		console.log(country);
+		if (country === null) {			
 			result = {country: '', error: 'ip address not found'};
 		} else {
-			result = { country: ipInfo.country };
+			result = { country: country };
 		}
 	}
 	
 	// remove for testing
 	// this will not be chaning too often, just cache it everywhere for 1 hours
-	// res.setHeader('Cache-Control', 'public, max-age=3600');
-    // res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+	//res.setHeader('Cache-Control', 'public, max-age=3600');
+    //res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
 
     res.send(result);
 });

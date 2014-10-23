@@ -2,6 +2,7 @@ var assert = require('assert');
 var Q = require('q');
 var parsingUtils = require('../utils/parsing_utils');
 var binaryList = require('../utils/binary_list');
+var directAcccess = require('../utils/direct_access');
 
 var start = process.hrtime();
 
@@ -136,6 +137,89 @@ describe('utils module', function(){
 		});
 	});
 
+	describe('direct access', function(){
+
+		it('should find a direct match (low area)', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = directAcccess.createDirectAccessList(data);
+				var result = list.find(2001406464);
+				assert.equal("B", result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+
+		it('should find a direct match (high area)', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = directAcccess.createDirectAccessList(data);
+				var result = list.find(2001406478, true);
+				assert.equal("B", result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+
+		it('should find in-direct match', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = directAcccess.createDirectAccessList(data);
+				var result = list.find(2001406470, true);
+				assert.equal("B", result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+
+		it('should not found anything for missing ip', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = directAcccess.createDirectAccessList(data);
+				var result = list.find(2001406479, true);
+				assert.equal(null, result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+
+		it('should find last item on the list', function(done) {
+			var res = parsingUtils.parseFile(testFilePath);
+			var data = [];
+			res.then(function(){
+
+				var list = directAcccess.createDirectAccessList(data);
+				var result = list.find(2037380272, true);
+				assert.equal("Z", result);
+				done();
+			}, function(){
+			}, function(item) {
+				data.push(item);
+			})
+			.catch(function(e) { done(e); });
+		});
+	});
+
 	describe.skip('should be performant enough', function(){
 
 		it('binary search', function(done){
@@ -190,8 +274,20 @@ describe('utils module', function(){
 					var result = list.find(2002534209);
 				}
 				stopwatch('test for 1.000.000 calls');
-
 				assert.equal("PHILIPPINES", result.country);
+
+				console.log();
+				stopwatch('starting direct access');
+				var list = directAcccess.createDirectAccessList(data);
+				stopwatch('building direct access list');
+				var result = list.find(2002534209);
+				stopwatch('warm up');
+				for (var i = 0; i < 1000000; i++) {
+					var result = list.find(2002534209);
+				}
+				stopwatch('test for 1.000.000 calls');
+
+				assert.equal("PHILIPPINES", result);
 
 				done();
 
