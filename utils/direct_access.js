@@ -6,14 +6,10 @@ var createDirectAccessList = function(input){
 	var bufferList = [];
 
 	// collect countries & check ordering
-	var last = 0;
 	var countries = {};
 	var countryIndex = 0;
 	input.forEach(function(item){
 		if (item.from && item.to) {
-			if (item.from > item.to || last > item.from) {
-				throw new Error('the list is not sorted');			
-			}
 			if (!countries[item.country]) {
 				countries[item.country] = countryIndex;
 				countryIndex++;	
