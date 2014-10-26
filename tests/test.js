@@ -300,6 +300,22 @@ describe('utils module', function(){
 
 	});
 
+	describe('aditional tests', function(){
+		it.skip ('can exceed 1GB limit', function(){
+			this.timeout(200000);
+
+			var bufferList = [];
+			for (var i = 0; i < 0xff; i++) {
+				var buff = new Buffer(0xffffff);
+				bufferList[i] = buff;
+				for (var j = 0; j < 0xffffff; j++) {
+					buff[j] = 0;
+				}
+			}
+			assert.equal(0, bufferList[0xff-1][0xffffff-1]);
+		})
+	})
+
 	
 });
 
